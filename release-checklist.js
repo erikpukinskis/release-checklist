@@ -1,5 +1,6 @@
 var library = require("module-library")(require)
 
+
 module.exports = library.export(
   "release-checklist",
   function() {
@@ -9,7 +10,8 @@ module.exports = library.export(
 
       var list = {
         id: id,
-        story: story
+        story: story,
+        tasks: []
       }
 
       if (!list.id) { assignId(list) }
@@ -20,6 +22,20 @@ module.exports = library.export(
 
     releaseChecklist.get = function(id) {
       return lists[id]
+    }
+
+    releaseChecklist.addTask = function(ref, task) {
+      if (!ref) {
+        throw new Error("No ref!")
+      }
+
+      if (typeof ref == "string") {
+        var list = lists[ref]
+      } else {
+        var list = ref
+      }
+
+      list.tasks.push(task)
     }
 
     function assignId(list) {

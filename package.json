@@ -9,7 +9,8 @@
     "web-site": "*",
     "browser-bridge": "*",
     "tell-the-universe": "*",
-    "basic-styles": "*"
+    "basic-styles": "*",
+    "function-call": "*"
   },
   "scripts": {
     "start": "node start.js"

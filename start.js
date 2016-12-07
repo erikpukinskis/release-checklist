@@ -1,14 +1,15 @@
 var library = require("module-library")(require)
 
 library.using(
-  ["./", "web-element", "web-site", "browser-bridge", "tell-the-universe", "basic-styles"],
-  function(releaseChecklist, element, WebSite, BrowserBridge, tellTheUniverse, basicStyles) {
+  ["./", "web-element", "web-site", "browser-bridge", "tell-the-universe", "basic-styles", "./make-it-checkable"],
+  function(releaseChecklist, element, WebSite, BrowserBridge, tellTheUniverse, basicStyles, makeItCheckable) {
 
     tellTheUniverse = tellTheUniverse.withNames({
       releaseChecklist: "release-checklist"
     })
 
     releaseChecklist("Someone can build a house", "4uwzyfhcsav8ia4i")
+    releaseChecklist.addTask("4uwzyfhcsav8ia4i", "hi")
 
     var site = new WebSite()
 
@@ -57,14 +58,30 @@ library.using(
     })
 
     function renderChecklist(list, bridge) {
-      // var render = renderTask.bind(null, list)
 
-      // var tasks = list.tasks.forEach(render)
+      var checked = bridge.defineFunction(function() {
+        console.log("checked!")
+      })
 
-      var form = element("form", {method: "post", action: "/stories/"+list.id+"/tasks"}, [
+      var taskTemplate = element.template(
+        ".task",
+        element.style({
+          "margin-bottom": "0.5em",
+        }),
+        function(text) {
+          this.addChild(text)
+
+          makeItCheckable(this, bridge, checked)
+        }
+      )
+
+      bridge.addToHead(makeItCheckable.stylesheet)
+      bridge.addToHead(element.stylesheet(taskTemplate))
+
+      var form = element("form", {method: "post", action: "/release-checklist/"+list.id+"/tasks"}, [
         element("h1", list.story),
-        // tasks,
-        element("p", "Enter items to check off."),
+        list.tasks.map(taskTemplate),
+        element("p", "Enter items to check off:"),
         element("textarea", {name: "tasks"}),
         element("input", {type: "submit", value: "Add tasks"}),
       ])
@@ -72,27 +89,23 @@ library.using(
       bridge.send(form)
     }
 
-    // function renderTask(list, task) {
-    //   return element("a", [checkBox(), element(task.description)])
-    // }
+    site.addRoute("post", "/release-checklist/:id/tasks", function(request, response) {
+      var lines = request.body.tasks.split("\n")
 
-    // site.addRoute("post", "/stories/:id/tasks", function(request, response) {
-    //   var lines = request.body.tasks.split("\n")
+      var id = request.params.id
+      var list = releaseChecklist.get(id)
 
-    //   var list = releaseChecklist.get(id)
-    //   var id = request.params.id
+      lines.forEach(function(line) {
+        var text = line.trim()
 
-    //   lines.forEach(function(line) {
-    //     var text = line.trim()
+        if (text.length < 1) { return }
 
-    //     if (text.length < 1) { return }
+        releaseChecklist.addTask(list, text)
+        tellTheUniverse("releaseChecklist.addTask", id, text)
+      })
 
-    //     releaseChecklist.addTask(list, text)
-    //     tellTheUniverse("releaseChecklist.addTask", id, text)
-    //   })
-
-    //   renderChecklist(list, response)
-    // })
+      renderChecklist(list, baseBridge.forResponse(response))
+    })
 
     site.start(1441)
   }
