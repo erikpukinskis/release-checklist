@@ -15,12 +15,18 @@ module.exports = library.export(
       }
 
       if (!list.id) { assignId(list) }
+      lists[list.id] = list
+      releaseChecklist.count++
 
-      lists[id] = list
       return list
     }
 
+    releaseChecklist.count = 0
+
     releaseChecklist.get = function(id) {
+      if (!lists[id]) {
+        debugger
+      }
       return lists[id]
     }
 
@@ -40,7 +46,7 @@ module.exports = library.export(
 
     function assignId(list) {
       do {
-        var id = Math.random().toString(36).split(".")[1]
+        var id = Math.random().toString(36).split(".")[1].substr(0,6)
       } while(lists[id])
 
       list.id = id

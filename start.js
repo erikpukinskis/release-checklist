@@ -1,15 +1,34 @@
 var library = require("module-library")(require)
 
 library.using(
-  ["./", "web-element", "web-site", "browser-bridge", "tell-the-universe", "basic-styles", "./make-it-checkable"],
-  function(releaseChecklist, element, WebSite, BrowserBridge, tellTheUniverse, basicStyles, makeItCheckable) {
+  ["./", "web-element", "web-site", "browser-bridge", "tell-the-universe", "basic-styles", "./make-it-checkable", "make-request"],
+  function(releaseChecklist, element, WebSite, BrowserBridge, tellTheUniverse, basicStyles, makeItCheckable, makeRequest) {
 
-    tellTheUniverse = tellTheUniverse.withNames({
-      releaseChecklist: "release-checklist"
-    })
+    tellTheUniverse = tellTheUniverse
+      .called("project-process")
+      .withNames({
+        releaseChecklist: "release-checklist"
+      })
 
-    releaseChecklist("Someone can build a house", "4uwzyfhcsav8ia4i")
-    releaseChecklist.addTask("4uwzyfhcsav8ia4i", "hi")
+    if (process.env.AWS_ACCESS_KEY_ID) {
+      tellTheUniverse.persistToS3({
+        key: process.env.AWS_ACCESS_KEY_ID,
+        secret: process.env.AWS_SECRET_ACCESS_KEY,
+        bucket: "ezjs"
+      })
+
+      tellTheUniverse.loadFromS3(function(){
+        console.log("OK! "+releaseChecklist.count+" lists")
+      })
+    }
+
+
+    // releaseChecklist("Someone can build a house", "4uwzyf")
+
+    // releaseChecklist.addTask("4uwzyf", "project facilitator can write down a release checklist")
+    // releaseChecklist.addTask("4uwzyf", "planner can add a project plan as a dependency to a task")
+    // releaseChecklist.addTask("4uwzyf", "planner writes bond")
+    // releaseChecklist.addTask("4uwzyf", "planner adds labor allocations to bond")
 
     var site = new WebSite()
 
@@ -29,17 +48,16 @@ library.using(
       baseBridge.responseHandler(storyForm)
     )
 
+    var storyBridge
     site.addRoute("post", "/stories", function(request, response) {
 
       var list = releaseChecklist(request.body.story)
 
       tellTheUniverse("releaseChecklist", list.story, list.id)
 
-      bridge = baseBridge.forResponse(response)
+      bridge = storyBridge = baseBridge.forResponse(response)
 
-      bridge.asap([list.id], function(id) {
-        history.pushState(null, null, "/release-checklist/"+id)
-      })
+      bridge.changePath("/release-checklist/"+list.id)
 
       renderChecklist(list, bridge)
     })
@@ -49,7 +67,7 @@ library.using(
       var list = releaseChecklist.get(request.params.id)
 
       if (!list) {
-        throw new Error("No list "+request.params.id)
+        throw new Error("No list "+request.params.id+" to show")
       }
 
       var bridge = baseBridge.forResponse(response)
@@ -59,19 +77,28 @@ library.using(
 
     function renderChecklist(list, bridge) {
 
-      var checked = bridge.defineFunction(function() {
-        console.log("checked!")
-      })
+      var happened = bridge.defineFunction(
+        [makeRequest.defineOn(bridge)],
+        function happened(makeRequest, listId, text) {
+          var path = "/release-checklist/"+listId+"/happened/"+encodeURIComponent(text)
+
+          makeRequest({method: "post", path: path})
+
+        }
+      ).withArgs(list.id)
+
 
       var taskTemplate = element.template(
         ".task",
         element.style({
           "margin-bottom": "0.5em",
         }),
-        function(text) {
+        function(listId, text) {
           this.addChild(text)
 
-          makeItCheckable(this, bridge, checked)
+          var onChecked = happened.withArgs(text)
+
+          makeItCheckable(this, bridge, onChecked)
         }
       )
 
@@ -80,7 +107,7 @@ library.using(
 
       var form = element("form", {method: "post", action: "/release-checklist/"+list.id+"/tasks"}, [
         element("h1", list.story),
-        list.tasks.map(taskTemplate),
+        list.tasks.map(taskTemplate.bind(null, list.id)),
         element("p", "Enter items to check off:"),
         element("textarea", {name: "tasks"}),
         element("input", {type: "submit", value: "Add tasks"}),
@@ -95,16 +122,30 @@ library.using(
       var id = request.params.id
       var list = releaseChecklist.get(id)
 
+      if (!list) {
+        throw new Error("No list "+id+"  to add tasks to")
+      }
+
       lines.forEach(function(line) {
         var text = line.trim()
 
         if (text.length < 1) { return }
 
         releaseChecklist.addTask(list, text)
+
         tellTheUniverse("releaseChecklist.addTask", id, text)
       })
 
-      renderChecklist(list, baseBridge.forResponse(response))
+      var bridge = baseBridge.forResponse(response)
+
+      bridge.changePath("/release-checklist/"+list.id)
+
+      renderChecklist(list, bridge)
+    })
+
+    site.addRoute("post", "/release-checklist/:id/happened/:text", function(request, response) {
+      console.log("happened!")
+      response.send({status: "ok"})
     })
 
     site.start(1441)

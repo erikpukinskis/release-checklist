@@ -10,7 +10,8 @@
     "browser-bridge": "*",
     "tell-the-universe": "*",
     "basic-styles": "*",
-    "function-call": "*"
+    "function-call": "*",
+    "make-request": "*"
   },
   "scripts": {
     "start": "node start.js"
