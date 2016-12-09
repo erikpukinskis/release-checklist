@@ -11,7 +11,8 @@ module.exports = library.export(
       var list = {
         id: id,
         story: story,
-        tasks: []
+        tasks: [],
+        tasksCompleted: [],
       }
 
       if (!list.id) { assignId(list) }
@@ -23,14 +24,9 @@ module.exports = library.export(
 
     releaseChecklist.count = 0
 
-    releaseChecklist.get = function(id) {
-      if (!lists[id]) {
-        debugger
-      }
-      return lists[id]
-    }
+    releaseChecklist.get = get
 
-    releaseChecklist.addTask = function(ref, task) {
+    function get(ref) {
       if (!ref) {
         throw new Error("No ref!")
       }
@@ -41,7 +37,27 @@ module.exports = library.export(
         var list = ref
       }
 
+      if (!list) {
+        throw new Error("No list "+ref)
+      }
+
+      return list
+    }
+
+    releaseChecklist.addTask = function(ref, task) {
+      var list = get(ref)
+
       list.tasks.push(task)
+    }
+
+    releaseChecklist.checkOff = function(ref, text) {
+      var list = get(ref)
+
+      var i = list.tasks.indexOf(text)
+      if (i < 0) {
+        throw new Error("No task «"+text+"» on list "+(ref.id||ref))
+      }
+      list.tasksCompleted[i] = true
     }
 
     function assignId(list) {

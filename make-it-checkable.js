@@ -5,19 +5,19 @@ module.exports = library.export(
   ["web-element", "function-call"],
   function(element, functionCall) {
 
-    function makeItCheckable(el, bridge, handler) {
+    function makeItCheckable(el, bridge, handler, options) {
 
-      var isCompleted = false
+      var isChecked = options.checked || false
 
-      el.children.unshift(checkBox(isCompleted))
+      el.children.unshift(checkBox())
 
       var id = el.assignId()
 
-      if (isCompleted) {
-        el.classes.push("task-completed")
+      if (isChecked) {
+        el.classes.push("is-checked")
       }
 
-      el.classes.push("task-"+id)
+      el.classes.push("checkable-"+id)
 
       el.onclick(checkOffOnBridge(bridge).withArgs(functionCall.raw("event"), id, handler).evalable())
     }
@@ -28,13 +28,13 @@ module.exports = library.export(
       if (!checkOff) {
         checkOff = bridge.__makeItCheckableCheckOffBinding = bridge.defineFunction(function checkOff(event, id, callback) {
           event.preventDefault()
-          var el = document.querySelector(".task-"+id)
+          var el = document.querySelector(".checkable-"+id)
 
-          var isCompleted = el.classList.contains("task-completed")
+          var isCompleted = el.classList.contains("is-checked")
 
           if (isCompleted) { return }
 
-          el.classList.add("task-completed")
+          el.classList.add("is-checked")
 
           callback(id)
         })
@@ -51,7 +51,7 @@ module.exports = library.export(
       "✗"
     )
 
-    var checkMarkChecked = element.style(".task-completed .check-mark", {
+    var checkMarkVisible = element.style(".is-checked .check-mark", {
       "visibility": "visible",
       "color": "#888",
     })
@@ -75,14 +75,14 @@ module.exports = library.export(
       checkMark()
     )
 
-    var taskCompleted = element.template(
-      ".task-completed",
+    var checkableChecked = element.template(
+      ".is-checked",
       element.style({
         "text-decoration": "line-through"
       })
     )
 
-    makeItCheckable.stylesheet = element.stylesheet(checkMark, checkMarkChecked, checkBox, taskCompleted)
+    makeItCheckable.stylesheet = element.stylesheet(checkMark, checkMarkVisible, checkBox, checkableChecked)
 
     return makeItCheckable
   }

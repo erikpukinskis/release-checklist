@@ -93,21 +93,28 @@ library.using(
         element.style({
           "margin-bottom": "0.5em",
         }),
-        function(listId, text) {
+        function(listId, text, isComplete) {
           this.addChild(text)
 
           var onChecked = happened.withArgs(text)
 
-          makeItCheckable(this, bridge, onChecked)
+          makeItCheckable(this, bridge, onChecked, {checked: isComplete})
         }
       )
 
       bridge.addToHead(makeItCheckable.stylesheet)
       bridge.addToHead(element.stylesheet(taskTemplate))
 
+      var tasks = list.tasks.map(
+        function(text, i) {
+          return taskTemplate(list.id, text, list.tasksCompleted[i]||false)
+        }
+      )
+
+
       var form = element("form", {method: "post", action: "/release-checklist/"+list.id+"/tasks"}, [
         element("h1", list.story),
-        list.tasks.map(taskTemplate.bind(null, list.id)),
+        tasks,
         element("p", "Enter items to check off:"),
         element("textarea", {name: "tasks"}),
         element("input", {type: "submit", value: "Add tasks"}),
@@ -144,13 +151,21 @@ library.using(
     })
 
     site.addRoute("post", "/release-checklist/:id/happened/:text", function(request, response) {
-      console.log("happened!")
+
+      var id = request.params.id
+      var text = request.params.text
+
+      releaseChecklist.checkOff(id, text)
+
+      tellTheUniverse("releaseChecklist.checkOff", id, text)
+
       response.send({status: "ok"})
     })
 
     site.start(1441)
   }
 )
+
 
 // Release Checklist for selling a house
 
