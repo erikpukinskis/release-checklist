@@ -62,10 +62,16 @@ module.exports = library.export(
 
     function assignId(list) {
       do {
-        var id = Math.random().toString(36).split(".")[1].substr(0,6)
+        var id = "chk"+Math.random().toString(36).split(".")[1].substr(0,4)
       } while(lists[id])
 
       list.id = id
+    }
+
+    releaseChecklist.bootServer = function(site) {
+      library.using(["./server"], function(bootServer) {
+        bootServer(site)
+      })
     }
     
     return releaseChecklist
