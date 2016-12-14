@@ -4,14 +4,7 @@
   "description": "Track tasks to know when something can happen",
   "main": "release-checklist.js",
   "dependencies": {
-    "module-library": "*",
-    "web-element": "*",
-    "web-site": "*",
-    "browser-bridge": "*",
-    "tell-the-universe": "*",
-    "basic-styles": "*",
-    "function-call": "*",
-    "make-request": "*"
+    "module-library": "*"
   },
   "scripts": {
     "start": "node start.js"

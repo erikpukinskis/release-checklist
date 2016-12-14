@@ -67,12 +67,6 @@ module.exports = library.export(
 
       list.id = id
     }
-
-    releaseChecklist.bootServer = function(site) {
-      library.using(["./server"], function(bootServer) {
-        bootServer(site)
-      })
-    }
     
     return releaseChecklist
   }
