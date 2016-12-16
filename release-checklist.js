@@ -50,14 +50,24 @@ module.exports = library.export(
       list.tasks.push(task)
     }
 
-    releaseChecklist.checkOff = function(ref, text) {
-      var list = get(ref)
-
+    function taskIndex(list, text) {
       var i = list.tasks.indexOf(text)
       if (i < 0) {
         throw new Error("No task «"+text+"» on list "+(ref.id||ref))
       }
+      return i
+    }
+
+    releaseChecklist.checkOff = function(ref, text) {
+      var list = get(ref)
+      var i = taskIndex(list, text)
       list.tasksCompleted[i] = true
+    }
+
+    releaseChecklist.uncheck = function(ref, text) {
+      var list = get(ref)
+      var i = taskIndex(list, text)
+      list.tasksCompleted[i] = false
     }
 
     function assignId(list) {
@@ -71,4 +81,3 @@ module.exports = library.export(
     return releaseChecklist
   }
 )
-
