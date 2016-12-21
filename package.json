@@ -6,8 +6,12 @@
   "dependencies": {
     "module-library": "*"
   },
+  "devDependencies": {
+    "run-test": "*"
+  },
   "scripts": {
-    "start": "node start.js"
+    "start": "node start",
+    "test": "node test"
   },
   "repository": {
     "type": "git",

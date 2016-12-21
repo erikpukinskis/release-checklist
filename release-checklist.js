@@ -13,6 +13,7 @@ module.exports = library.export(
         story: story,
         tasks: [],
         tasksCompleted: [],
+        tagged: {}
       }
 
       if (!list.id) { assignId(list) }
@@ -48,6 +49,23 @@ module.exports = library.export(
       var list = get(ref)
 
       list.tasks.push(task)
+    }
+
+    releaseChecklist.tag = function(ref, task, tag) {
+      var list = get(ref)
+
+      if (!list.tagged[tag]) {
+        list.tagged[tag] = []
+      }
+      list.tagged[tag].push(task)
+    }
+
+    releaseChecklist.eachTagged = function(ref, tag, callback) {
+      var list = get(ref)
+      
+      if (!list.tagged[tag]) { return }
+
+      list.tagged[tag].forEach(callback)     
     }
 
     function taskIndex(list, text) {
