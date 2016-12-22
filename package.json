@@ -1,6 +1,6 @@
 {
   "name": "release-checklist",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Track tasks to know when something can happen",
   "main": "release-checklist.js",
   "dependencies": {
