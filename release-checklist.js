@@ -16,6 +16,8 @@ module.exports = library.export(
         tagged: {}
       }
 
+      list.eachTagged = eachTagged.bind(list)
+      
       if (!list.id) { assignId(list) }
       lists[list.id] = list
       releaseChecklist.count++
@@ -60,12 +62,9 @@ module.exports = library.export(
       list.tagged[tag].push(task)
     }
 
-    releaseChecklist.eachTagged = function(ref, tag, callback) {
-      var list = get(ref)
-      
-      if (!list.tagged[tag]) { return }
-
-      list.tagged[tag].forEach(callback)     
+    function eachTagged(tag, callback) {  
+      if (!this.tagged[tag]) { return }
+      this.tagged[tag].forEach(callback)     
     }
 
     function taskIndex(list, text) {
