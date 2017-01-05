@@ -13,10 +13,13 @@ module.exports = library.export(
         story: story,
         tasks: [],
         tasksCompleted: [],
-        tagged: {}
+        tagged: {},
+        tagData: {},
+        tags: []
       }
 
       list.eachTagged = eachTagged.bind(list)
+      list.registerTag = registerTag.bind(list)
       
       if (!list.id) { assignId(list) }
       lists[list.id] = list
@@ -51,6 +54,14 @@ module.exports = library.export(
       var list = get(ref)
 
       list.tasks.push(task)
+    }
+
+   function registerTag(identifier, data) {
+      if (this.tagData[identifier]) {
+        return
+      }
+      this.tagData[identifier] = data
+      this.tags.push(identifier)
     }
 
     releaseChecklist.tag = function(ref, task, tag) {
