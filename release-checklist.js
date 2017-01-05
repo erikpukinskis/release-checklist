@@ -3,8 +3,17 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "release-checklist",
-  function() {
+  ["./dasherize"],
+  function(dasherize) {
     var lists = {}
+
+    // Here ye here ye
+
+    // Dasherizing is a thing here. Different strings cannot have the same dasherization. Not allowed. UIs are expected to prevent that.
+
+    // In return for this strict chore, we have been blessed to know that the IDs of all tasks are always a sensible dasherization.
+
+    // We can go back and update the DB with new dasherizations if one doth offend us
 
     function releaseChecklist(story, id) {
 
@@ -13,14 +22,18 @@ module.exports = library.export(
         story: story,
         tasks: [],
         tasksCompleted: [],
-        tagged: {},
         tagData: {},
-        tags: []
+        tags: [],
+        tasksByTag: {},
+        tagsByTask: {},
       }
 
       list.eachTagged = eachTagged.bind(list)
       list.registerTag = registerTag.bind(list)
-      
+      list.taskIsCompleted = taskIsCompleted.bind(list)
+      list.tagsForTask = tagsForTask.bind(list)
+      list.hasTag = hasTag.bind(list)
+
       if (!list.id) { assignId(list) }
       lists[list.id] = list
       releaseChecklist.count++
@@ -50,32 +63,65 @@ module.exports = library.export(
       return list
     }
 
-    releaseChecklist.addTask = function(ref, task) {
+    releaseChecklist.addTask = function(ref, text) {
+
       var list = get(ref)
 
-      list.tasks.push(task)
+      list.tasks.push(text)
     }
 
-   function registerTag(identifier, data) {
-      if (this.tagData[identifier]) {
+
+    // Tags
+ 
+    function registerTag(text, data) {
+      var tagId = dasherize(text)
+      if (this.tagData[tagId]) {
         return
       }
-      this.tagData[identifier] = data
-      this.tags.push(identifier)
+      this.tagData[tagId] = data
+      var i = this.tags.length
+      this.tags.push(text)
     }
 
-    releaseChecklist.tag = function(ref, task, tag) {
+    function taskIsCompleted(text) {
+      return !!this.tasksCompleted[text]
+    }
+
+    releaseChecklist.addTag = function(ref, task, tag) {
       var list = get(ref)
 
-      if (!list.tagged[tag]) {
-        list.tagged[tag] = []
+      if (!list.tasksByTag[tag]) {
+        list.tasksByTag[tag] = []
       }
-      list.tagged[tag].push(task)
+      list.tasksByTag[tag].push(task)
+
+      if (!list.tagsByTask[task]) {
+        list.tagsByTask[task] = []
+      }
+
+      list.tagsByTask[task].push(tag)
+    }
+
+    function tagsForTask(task) {
+      var tags = this.tagsByTask[task]
+      console.log("tags for task", task, ":", tags)
+      return tags || []
     }
 
     function eachTagged(tag, callback) {  
-      if (!this.tagged[tag]) { return }
-      this.tagged[tag].forEach(callback)     
+      if (!this.tasksByTag[tag]) { return }
+      this.tasksByTag[tag].forEach(callback)     
+    }
+
+    function hasTag(task, tagId) {
+      var tagsByTask = this.tagsByTask[task]
+      if (!tagsByTask) {
+        console.log("no tags for", task)
+        return false
+      }
+      var i = tagsByTask[task].indexOf(tagId)
+      console.log("looking for", tagId, "in", tagsByTask[task])
+      return i >= 0
     }
 
     function taskIndex(list, text) {
