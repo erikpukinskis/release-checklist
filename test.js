@@ -13,7 +13,7 @@ runTest(
 
     releaseChecklist.addTask(list, "Wash bottles")
 
-    releaseChecklist.addTag(list, "Pick apples", "field work")
+    releaseChecklist.tag(list, "Pick apples", "field work")
 
     var alreadyCalled = false
 
