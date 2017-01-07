@@ -66,16 +66,9 @@ module.exports = library.export(
     releaseChecklist.addTask = function(ref, text) {
 
       var list = get(ref)
-      var taskId = dasherize(text)
-      var task = {
-        id: taskId,
-        text: text,
-        tagIds: [],
-      }
 
-      return task
+      list.tasks.push(text)
     }
-
 
 
     // Tags
@@ -96,24 +89,46 @@ module.exports = library.export(
 
     releaseChecklist.tag = function(ref, taskText, tagText) {
       var list = get(ref)
-      var tagId = dasherize(tagText)
+      if (taskText == 0) { throw new Error("task is 0") }
       var taskId = dasherize(taskText)
 
-      if (!list.tasksByTag[tagId]) {
-        list.tasksByTag[tagId] = []
+      if (!list.tasksByTag[tagText]) {
+        list.tasksByTag[tagText] = []
       }
-      list.tasksByTag[tagId].push(task)
+      list.tasksByTag[tagText].push(taskText)
 
-      var task = list.tasksById[taskId]
-      if (!task.tags) {
-        task.tags = []
+      if (!list.tagsByTask[taskId]) {
+        list.tagsByTask[taskId] = []
       }
-      task.tags.push(tag)
+
+      console.log("THROW tagged", taskId, "ie", taskText, "with", tagText)
+      list.tagsByTask[taskId].push(tagText)
     }
 
-    function tagsForTask(taskId) {
-      var task = this.tagsById[taskId]
-      return task.tags || []
+    releaseChecklist.untag = function(ref, taskText, tagText) {
+      var list = get(ref)
+      var taskId = dasherize(taskText)
+
+      if (list.tasksByTag[tagText]) {
+        remove(tagText, list.tasksByTag[tagText])
+      }
+
+      if (list.tagsByTask[taskId]) {
+        remove(tagText, list.tagsByTask[taskId])
+      }
+    }
+
+    function remove(item, array) {
+      var i = array.indexOf(item)
+      if (i < 0) { return }
+      array.splice(i, 1)
+    }
+
+    function tagsForTask(text) {
+      var taskId = dasherize(text)
+      var tags = this.tagsByTask[taskId]
+      console.log("CATCH tags for task", taskId, ":", tags)
+      return tags || []
     }
 
     function eachTagged(tag, callback) {  
@@ -121,10 +136,21 @@ module.exports = library.export(
       this.tasksByTag[tag].forEach(callback)     
     }
 
-    function hasTag(taskId, tagId) {
-      var task = this.tasksById[taskId]
-      var i = task.tags.indexOf(tagId)
-      return i >= 0
+    function hasTag(taskText, tagText) {
+      var taskId = dasherize(taskText)
+
+      var tags = this.tagsByTask[taskId]
+      if (!tags) {
+        console.log("no tags for", taskText)
+        return false
+      }
+
+      var tagId = dasherize(tagText)
+      var i = tags.indexOf(tagText)
+      var hasTag = i >= 0
+      console.log("looking for", tagText, "in", tags, hasTag ? "yup" : "NOT FOUND")
+
+      return hasTag
     }
 
     function taskIndex(list, text) {
