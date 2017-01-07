@@ -66,9 +66,16 @@ module.exports = library.export(
     releaseChecklist.addTask = function(ref, text) {
 
       var list = get(ref)
+      var taskId = dasherize(text)
+      var task = {
+        id: taskId,
+        text: text,
+        tagIds: [],
+      }
 
-      list.tasks.push(text)
+      return task
     }
+
 
 
     // Tags
@@ -87,25 +94,26 @@ module.exports = library.export(
       return !!this.tasksCompleted[text]
     }
 
-    releaseChecklist.addTag = function(ref, task, tag) {
+    releaseChecklist.tag = function(ref, taskText, tagText) {
       var list = get(ref)
+      var tagId = dasherize(tagText)
+      var taskId = dasherize(taskText)
 
-      if (!list.tasksByTag[tag]) {
-        list.tasksByTag[tag] = []
+      if (!list.tasksByTag[tagId]) {
+        list.tasksByTag[tagId] = []
       }
-      list.tasksByTag[tag].push(task)
+      list.tasksByTag[tagId].push(task)
 
-      if (!list.tagsByTask[task]) {
-        list.tagsByTask[task] = []
+      var task = list.tasksById[taskId]
+      if (!task.tags) {
+        task.tags = []
       }
-
-      list.tagsByTask[task].push(tag)
+      task.tags.push(tag)
     }
 
-    function tagsForTask(task) {
-      var tags = this.tagsByTask[task]
-      console.log("tags for task", task, ":", tags)
-      return tags || []
+    function tagsForTask(taskId) {
+      var task = this.tagsById[taskId]
+      return task.tags || []
     }
 
     function eachTagged(tag, callback) {  
@@ -113,14 +121,9 @@ module.exports = library.export(
       this.tasksByTag[tag].forEach(callback)     
     }
 
-    function hasTag(task, tagId) {
-      var tagsByTask = this.tagsByTask[task]
-      if (!tagsByTask) {
-        console.log("no tags for", task)
-        return false
-      }
-      var i = tagsByTask[task].indexOf(tagId)
-      console.log("looking for", tagId, "in", tagsByTask[task])
+    function hasTag(taskId, tagId) {
+      var task = this.tasksById[taskId]
+      var i = task.tags.indexOf(tagId)
       return i >= 0
     }
 
