@@ -63,6 +63,13 @@ module.exports = library.export(
       return list
     }
 
+    releaseChecklist.eachStory = function(callback) {
+      for(var id in lists) {
+        var story = get(id).story
+        callback(story, id)
+      }
+    }
+    
     releaseChecklist.addTask = function(ref, text) {
 
       var list = get(ref)
@@ -133,7 +140,14 @@ module.exports = library.export(
 
     function eachTagged(tag, callback) {  
       if (!this.tasksByTag[tag]) { return }
-      this.tasksByTag[tag].forEach(callback)     
+      var list = this
+
+      this.tasksByTag[tag].forEach(function(task) {
+        console.log("task is", task)
+        var tagId = dasherize(tag)
+        var data = list.tagData[tagId]
+        callback(task, data)
+      })
     }
 
     function hasTag(taskText, tagText) {
