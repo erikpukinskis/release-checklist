@@ -108,7 +108,6 @@ module.exports = library.export(
         list.tagsByTask[taskId] = []
       }
 
-      console.log("THROW tagged", taskId, "ie", taskText, "with", tagText)
       list.tagsByTask[taskId].push(tagText)
     }
 
@@ -134,7 +133,6 @@ module.exports = library.export(
     function tagsForTask(text) {
       var taskId = dasherize(text)
       var tags = this.tagsByTask[taskId]
-      console.log("CATCH tags for task", taskId, ":", tags)
       return tags || []
     }
 
@@ -142,27 +140,25 @@ module.exports = library.export(
       if (!this.tasksByTag[tag]) { return }
       var list = this
 
-      this.tasksByTag[tag].forEach(function(task) {
-        console.log("task is", task)
+      var tasks = this.tasksByTag[tag]
+      for (var i=0; i<tasks.length; i++) {
+        var task = tasks[i]
         var tagId = dasherize(tag)
+        if (typeof list.tagData == "undefined") { throw new Error("no tag data?") }
         var data = list.tagData[tagId]
         callback(task, data)
-      })
+      }
     }
 
     function hasTag(taskText, tagText) {
       var taskId = dasherize(taskText)
-
       var tags = this.tagsByTask[taskId]
-      if (!tags) {
-        console.log("no tags for", taskText)
-        return false
-      }
+
+      if (!tags) { return false }
 
       var tagId = dasherize(tagText)
       var i = tags.indexOf(tagText)
       var hasTag = i >= 0
-      console.log("looking for", tagText, "in", tags, hasTag ? "yup" : "NOT FOUND")
 
       return hasTag
     }
