@@ -98,11 +98,16 @@ module.exports = library.export(
       var list = get(ref)
       if (taskText == 0) { throw new Error("task is 0") }
       var taskId = dasherize(taskText)
+      var tagId = dasherize(tagText)
 
-      if (!list.tasksByTag[tagText]) {
-        list.tasksByTag[tagText] = []
+      // The data model here is that when we are indexing by something, we index by the dasherized text, but when we store a reference we just store the actual text.
+
+      // So the keys in tasksByTag and tagsByTask are IDs, that way we don't have to worry about namespace diffusion, but the actual data stored in each slot is an array of full texts
+
+      if (!list.tasksByTag[tagId]) {
+        list.tasksByTag[tagId] = []
       }
-      list.tasksByTag[tagText].push(taskText)
+      list.tasksByTag[tagId].push(taskText)
 
       if (!list.tagsByTask[taskId]) {
         list.tagsByTask[taskId] = []
@@ -114,9 +119,10 @@ module.exports = library.export(
     releaseChecklist.untag = function(ref, taskText, tagText) {
       var list = get(ref)
       var taskId = dasherize(taskText)
+      var tagId = dasherize(tagText)
 
-      if (list.tasksByTag[tagText]) {
-        remove(taskId, list.tasksByTag[tagText])
+      if (list.tasksByTag[tagId]) {
+        remove(taskText, list.tasksByTag[tagId])
       }
 
       if (list.tagsByTask[taskId]) {
@@ -136,14 +142,15 @@ module.exports = library.export(
       return tags || []
     }
 
-    function eachTagged(tag, callback) {  
-      if (!this.tasksByTag[tag]) { return }
+    function eachTagged(tagText, callback) {  
+      var tagId = dasherize(tagText)
+      if (!this.tasksByTag[tagId]) { return }
       var list = this
 
-      var tasks = this.tasksByTag[tag]
+      var tasks = this.tasksByTag[tagId]
       for (var i=0; i<tasks.length; i++) {
         var task = tasks[i]
-        var tagId = dasherize(tag)
+        var tagId = dasherize(tagText)
         if (typeof list.tagData == "undefined") { throw new Error("no tag data?") }
         var data = list.tagData[tagId]
         callback(task, data)
