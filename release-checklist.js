@@ -116,7 +116,7 @@ module.exports = library.export(
       var taskId = dasherize(taskText)
 
       if (list.tasksByTag[tagText]) {
-        remove(tagText, list.tasksByTag[tagText])
+        remove(taskId, list.tasksByTag[tagText])
       }
 
       if (list.tagsByTask[taskId]) {
