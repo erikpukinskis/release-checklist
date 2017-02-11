@@ -198,15 +198,6 @@ module.exports = library.export(
       list.id = id
     }
 
-
-    // Test data
-
-    releaseChecklist("A 6x8 teensy house appears", "test")
-
-    releaseChecklist.addTask("test", "the function you passed to housePlan the function you passed to")
-
-    releaseChecklist.tag("test", "the-function-you-passed-to-house-plan-the-function-you-passed-to", "back wall section")
-
     return releaseChecklist
   }
 )
